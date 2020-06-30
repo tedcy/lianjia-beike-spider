@@ -15,6 +15,7 @@ from lib.utility.path import *
 from lib.zone.area import *
 from lib.utility.log import *
 import lib.utility.version
+import pandas as pd
 
 
 class ErShouSpider(BaseSpider):
@@ -28,19 +29,32 @@ class ErShouSpider(BaseSpider):
         :return: None
         """
         district_name = area_dict.get(area_name, "")
-        csv_file = self.today_path + "/{0}_{1}.csv".format(district_name, area_name)
-        with open(csv_file, "w") as f:
-            # 开始获得需要的板块数据
-            ershous = self.get_area_ershou_info(city_name, area_name)
-            # 锁定，多线程读写
-            if self.mutex.acquire(1):
-                self.total_num += len(ershous)
-                # 释放
-                self.mutex.release()
-            if fmt == "csv":
-                for ershou in ershous:
-                    # print(date_string + "," + xiaoqu.text())
-                    f.write(self.date_string + "," + ershou.text() + "\n")
+        csv_file = self.today_path + "/{0}_{1}.csv".format(district_name, area_name)\
+        # 开始获得需要的板块数据
+        while 1:
+            try:
+                ershous = self.get_area_ershou_info(city_name, area_name)
+                break
+            except Exception as e:
+                continue
+
+        # 锁定，多线程读写
+        if self.mutex.acquire(1):
+            self.total_num += len(ershous)
+            # 释放
+            self.mutex.release()
+        if fmt == "csv":
+            df=pd.DataFrame(columns=['data_string', 'district', 'area', 'name', 'price', 'desc', 'pic'])
+            for ershou in ershous:
+                df.loc[df.shape[0] + 1] = {
+                    'data_string': self.date_string, 'district': ershou.district,
+                    'area': ershou.area, 'name': ershou.name,
+                    'price': ershou.price, 'desc': ershou.desc,
+                    'pic': ershou.pic
+                }
+                #print(self.date_string + "," + ershou.text() + "\n")
+                #f.write(self.date_string + "," + ershou.text() + "\n")
+            df.to_csv(csv_file, index=False)
         print("Finish crawl area: " + area_name + ", save data to : " + csv_file)
 
     @staticmethod
