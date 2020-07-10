@@ -17,7 +17,9 @@ from lib.utility.log import *
 import lib.utility.version
 import pandas as pd
 
-
+proxies = {
+    'http': '127.0.0.1:8888',
+}
 class ErShouSpider(BaseSpider):
     def collect_area_ershou_data(self, city_name, area_name, fmt="csv"):
         """
@@ -76,7 +78,7 @@ class ErShouSpider(BaseSpider):
         page = 'http://{0}.{1}.com/ershoufang/{2}/'.format(city_name, SPIDER_NAME, area_name)
         print(page)  # 打印版块页面地址
         headers = create_headers()
-        response = requests.get(page, timeout=10, headers=headers)
+        response = requests.get(page, timeout=10, headers=headers, proxies=proxies)
         html = response.content
         if len(html) < 2000:
             raise(Exception('网页获取失败'))
@@ -98,7 +100,7 @@ class ErShouSpider(BaseSpider):
             print(page)  # 打印每一页的地址
             headers = create_headers()
             BaseSpider.random_delay()
-            response = requests.get(page, timeout=10, headers=headers)
+            response = requests.get(page, timeout=10, headers=headers, proxies=proxies)
             html = response.content
             soup = BeautifulSoup(html, "lxml")
 
