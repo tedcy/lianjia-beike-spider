@@ -78,6 +78,8 @@ class ErShouSpider(BaseSpider):
         headers = create_headers()
         response = requests.get(page, timeout=10, headers=headers)
         html = response.content
+        if len(html) < 2000:
+            raise(Exception('网页获取失败'))
         soup = BeautifulSoup(html, "lxml")
 
         # 获得总的页数，通过查找总页码的元素信息
@@ -87,6 +89,7 @@ class ErShouSpider(BaseSpider):
             total_page = int(matches.group(1))
         except Exception as e:
             print("\tWarning: only find one page for {0}".format(area_name))
+            print(len(html))
             print(e)
 
         # 从第一页开始,一直遍历到最后一页
@@ -121,7 +124,8 @@ class ErShouSpider(BaseSpider):
         return ershou_list
 
     def start(self):
-        city = get_city()
+        #city = get_city()
+        city = 'gz'
         self.today_path = create_date_path("{0}/ershou".format(SPIDER_NAME), city, self.date_string)
 
         t1 = time.time()  # 开始计时
